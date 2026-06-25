@@ -1,78 +1,78 @@
 import streamlit as st
 from openai import OpenAI
 
-# 1. 网页基础配置
-st.set_page_config(page_title="AI 智能健身饮食助手", layout="centered", page_icon="🍎")
+# ================= 核心配置 =================
+st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout="centered")
 
-st.title("健身饮食计划生成器")
-st.caption("生成最接地气的饮食方案")
+# ================= 功能一：女朋友侧边栏互动头像 =================
+st.sidebar.header("💖 专属能量站")
 
-# 2. 核心：无感读取本地配置的 API Key（最高效！）
+# 这里使用了一张高质量的二次元可爱女生头像，你可以随时换成你女朋友照片的图床链接
+avatar_url = "https://img.icons8.com/illustrations/lexis/112/girl.png"
+st.sidebar.image(avatar_url, use_container_width=True)
+
+# 侧边栏互动按钮
+if st.sidebar.button("🥰 戳戳歪歪（获取每日鼓励）"):
+    st.sidebar.balloon()  # 触发全屏放气球的炫酷特效！
+    st.sidebar.success("今天也要好好吃饭，健康减脂！你是最棒的，贴贴~ 💋")
+
+# ================= 主界面布局 =================
+st.title("💪 AI 智能健身饮食计划生成器")
+st.write("输入你的身体数据，让 DeepSeek 为你量身定制今日食谱。")
+
+# 从 Streamlit 云端的高级设置（Secrets）中安全读取密钥
 try:
     api_key = st.secrets["DEEPSEEK_API_KEY"]
 except Exception:
-    st.error("❌ 未检测到 secrets.toml 配置文件，请检查配置。")
+    st.error("未在云端检测到 DEEPSEEK_API_KEY，请检查高级设置。")
     st.stop()
 
-# 3. 用户数据输入界面
+# 初始化 DeepSeek 客户端
+client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+# 用户输入表单
 with st.form("user_info_form"):
-    st.subheader("第一步：填写身体数据")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
-    with col2:
         weight = st.number_input("体重 (kg)", min_value=30, max_value=200, value=70)
-    with col3:
-        age = st.number_input("年龄", min_value=1, max_value=100, value=20)
+        goal = st.selectbox("核心目标", ["减脂控能", "增肌塑形", "保持健康"])
+    with col2:
+        height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
+        exercise = st.selectbox("运动强度", ["久坐不动", "每周轻度运动", "每周中度运动", "每天高强度"])
+    
+    extra_notes = st.text_input("忌口或特殊需求（如：不吃香菜、海鲜过敏、预算有限）", value="无")
+    submit_btn = st.form_submit_button("🔥 立即一键生成方案")
 
-    st.subheader("第二步：明确你的目标与身份")
-    goal = st.selectbox("你的健身目标", ["增肌 (Gain Muscle)", "减脂 (Lose Fat)", "保持体型 (Maintain)"])
-
-    identity = st.selectbox("你的身份/场景", [
-        "学生党（主要吃食堂、校园超市、网购囤货）",
-        "上班族（外卖为主，无法自己做饭）",
-        "上班族（可以自己做饭，追求高效批量备餐）"
-    ])
-
-    submit_button = st.form_submit_button("开始生成我的专属饮食计划 🚀")
-
-# 4. 大模型调用逻辑
-if submit_button:
-    system_prompt = """
-    你是一个精通运动营养学和大众饮食习惯的 AI 健身教练。
-    你需要根据用户提供的身体数据（身高、体重、年龄、目标、身份场景），给出一套极具操作性的饮食建议。
-
-    回答必须严格包含以下两部分：
-
-    ## 📊 第一部分：每日宏量营养素目标
-    - 总热量（kcal）
-    - 蛋白质（g）
-    - 碳水化合物（g）
-    - 脂肪（g）
-    (请给出明确的数值或范围，并简要说明为什么这样设计)
-
-    ## 🍳 第二部分：场景化食谱推荐
-    根据用户的身份场景进行针对性推荐：
-    - 如果是学生党：必须围绕【食堂打饭攻略】、【校园超市/便利店精选】、【网购囤货（如即食鸡胸肉、全麦面包、燕麦）】来写。
-    - 如果是无法做饭的上班族：着重写【外卖如何聪明单点】和【便利店应急组合】。
-    - 如果是可以做饭的上班族：着重写【高效批量备餐 (Meal Prep) 方案】。
-    """
-
-    user_prompt = f"身高：{height}cm, 体重：{weight}kg, 年龄：{age}岁, 目标：{goal}, 身份：{identity}"
-
-    with st.spinner("DeepSeek 正在为你疯狂计算，请稍候..."):
+# 处理大模型请求
+if submit_btn:
+    prompt = f"你是一位资深的专业健身营养师。请根据以下用户数据制定一份保姆级的饮食计划：\n身高：{height}cm，\n体重：{weight}kg，\n目标：{goal}，\n运动强度：{exercise}，\n特殊需求：{extra_notes}。\n请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估。"
+    
+    with st.spinner("🧙‍♂️ 营养师正在疯狂计算中，请稍候..."):
         try:
-            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
+                    {"role": "system", "content": "你是一个专业的健康饮食AI助手，给出的方案必须条理清晰、排版美观。"},
+                    {"role": "user", "content": prompt}
                 ],
-                temperature=0.7
+                stream=False
             )
-            st.success("✨ 你的专属饮食计划已生成！")
-            st.markdown(response.choices[0].message.content)
-
+            # 获取生成的纯文本方案
+            result_text = response.choices[0].message.content
+            
+            # 展示方案
+            st.success("✨ 你的专属定制方案已生成！")
+            st.markdown(result_text)
+            
+            # ================= 功能二：一键下载功能 =================
+            st.write("---")
+            st.download_button(
+                label="📥 一键下载饮食计划 (.md文本)",
+                data=result_text,
+                file_name="我的专属AI饮食计划.md",
+                mime="text/markdown"
+            )
+            st.caption("💡 提示：下载后的 .md 文件可以直接用电脑或手机自带的文本工具打开，在浏览器或软件里点击“打印 -> 另存为 PDF”即可秒变精美 PDF 报告！")
+            
         except Exception as e:
-            st.error(f"DeepSeek 连接失败。错误信息: {e}")
+            st.error(f"调用 API 失败了，错误信息：{e}")
