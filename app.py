@@ -4,25 +4,23 @@ from openai import OpenAI
 # ================= 核心配置 =================
 st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout="centered")
 
-# ================= 功能一：女朋友侧边栏互动头像 =================
-
-# 这里使用了一张高质量的二次元可爱女生头像，你可以随时换成你女朋友照片的图床链接
-# ================= 功能一：女朋友侧边栏互动头像 =================
+# ================= 功能一：专属能量站（已修复全屏气球） =================
 st.sidebar.header("💖 专属能量站")
 
-# 替换为了国内访问极其稳定的高颜值大厂图床头像
-avatar_url = "log.jpg"
+# 采用国内访问极其稳定的高颜值大厂图床头像（如需换成自己的，直接改为 avatar_url = "avatar.png"）
+avatar_url = "https://img.alicdn.com/imgextra/i4/O1CN01Z5v6vD21gZ6v8YfVb_!!6000000007018-2-tps-200-200.png"
 st.sidebar.image(avatar_url, use_container_width=True)
 
 # 侧边栏互动按钮
 if st.sidebar.button("🥰 戳戳歪歪（获取每日鼓励）"):
-    st.balloons()  # ✨ 核心修复：去掉了 sidebar 且加上了 s！
+    st.balloons()  # ✨ 触发全屏放气球的炫酷特效！
     st.sidebar.success("今天也要好好吃饭，健康减脂！你是最棒的，贴贴~ 💋")
-# ================= 主界面布局 =================
-st.title("💪 AI 智能健身饮食计划生成器")
-st.write("输入你的身体数据，让 DeepSeek 为你量身定制今日食谱。")
 
-# 从 Streamlit 云端的高级设置（Secrets）中安全读取密钥
+# ================= 主界面标题 =================
+st.title("💪 健身饮食计划生成器")
+st.write("生成最接地气的饮食方案")
+
+# 从 Streamlit 云端安全读取密钥
 try:
     api_key = st.secrets["DEEPSEEK_API_KEY"]
 except Exception:
@@ -32,22 +30,48 @@ except Exception:
 # 初始化 DeepSeek 客户端
 client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
-# 用户输入表单
-with st.form("user_info_form"):
-    col1, col2 = st.columns(2)
-    with col1:
-        weight = st.number_input("体重 (kg)", min_value=30, max_value=200, value=70)
-        goal = st.selectbox("核心目标", ["减脂控能", "增肌塑形", "保持健康"])
-    with col2:
-        height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
-        exercise = st.selectbox("运动强度", ["久坐不动", "每周轻度运动", "每周中度运动", "每天高强度"])
-    
-    extra_notes = st.text_input("忌口或特殊需求（如：不吃香菜、海鲜过敏、预算有限）", value="无")
-    submit_btn = st.form_submit_button("🔥 立即一键生成方案")
+# ================= 完美还原：用户表单输入部分 =================
+st.header("第一步：填写身体数据")
+col1, col2, col3 = st.columns(3)
+with col1:
+    height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
+with col2:
+    weight = st.number_input("体重 (kg)", min_value=30, max_value=200, value=70)
+with col3:
+    age = st.number_input("年龄", min_value=1, max_value=120, value=20)
 
-# 处理大模型请求
+st.header("第二步：明确你的目标与身份")
+goal = st.selectbox(
+    "你的健身目标", 
+    ["增肌 (Gain Muscle)", "减脂控能 (Lose Weight)", "保持健康 (Stay Healthy)"]
+)
+
+identity = st.selectbox(
+    "你的身份/场景", 
+    [
+        "学生党（主要吃食堂、校园超市、网购囤货）",
+        "上班族（常吃外卖、久坐不动、偶尔做饭）",
+        "居家党（时间充裕、自己做饭、食材自由）"
+    ]
+)
+
+extra_notes = st.text_input("忌口或额外需求（如：不吃香菜、海鲜过敏等）", value="无")
+
+# 开始生成按钮
+submit_btn = st.button("🚀 开始生成我的专属饮食计划")
+
+# ================= 业务逻辑：处理大模型请求 =================
 if submit_btn:
-    prompt = f"你是一位资深的专业健身营养师。请根据以下用户数据制定一份保姆级的饮食计划：\n身高：{height}cm，\n体重：{weight}kg，\n目标：{goal}，\n运动强度：{exercise}，\n特殊需求：{extra_notes}。\n请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估。"
+    # 将用户的身份场景精准喂给 DeepSeek，让回答更接地气
+    prompt = f"""你是一位资深的专业健身营养师。请根据以下用户数据制定一份保姆级的饮食计划：
+- 身高：{height}cm
+- 体重：{weight}kg
+- 年龄：{age}岁
+- 健身目标：{goal}
+- 身份场景：{identity} （请务必严格根据这个场景定制。如果是学生党，请多推荐高校食堂、校园便利店容易获取的经济实惠的食材和菜品）
+- 额外需求：{extra_notes}
+
+请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估，排版请保持条理清晰、美观。"""
     
     with st.spinner("🧙‍♂️ 营养师正在疯狂计算中，请稍候..."):
         try:
