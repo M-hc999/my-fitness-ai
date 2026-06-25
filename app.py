@@ -94,7 +94,15 @@ if submit_btn:
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "你是一个专业的健康饮食AI助手，懂得男女生理代谢差异，给出的方案必须条理清晰、排版美观。"},
+                    {
+                        "role": "system", 
+                        "content": (
+                            "你是一个专业的健康饮食AI助手，懂得男女生理代谢差异，给出的方案必须条理清晰、排版美观。\n"
+                            "⚠️【重要排版要求】：在生成的 Markdown 表格中，如果单元格内部需要换行，"
+                            "请务必直接使用最原始的 <br> 标签，绝对不要加反斜杠转义（不要写成 \\<br\\>），"
+                            "也绝对不要写成转义字符（如 &lt;br&gt;），确保前端能够直接解析并完美换行！"
+                        )
+                    },
                     {"role": "user", "content": prompt}
                 ],
                 stream=True 
