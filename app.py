@@ -7,13 +7,13 @@ st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout=
 # ================= 功能一：专属能量站（已修复全屏气球） =================
 st.sidebar.header("💖 专属能量站")
 
-# 采用国内访问极其稳定的高颜值大厂图床头像（如需换成自己的，直接改为 avatar_url = "avatar.png"）
-avatar_url = "https://img.alicdn.com/imgextra/i4/O1CN01Z5v6vD21gZ6v8YfVb_!!6000000007018-2-tps-200-200.png"
+# 采用国内访问极其稳定的高颜值大厂图床头像
+avatar_url = "log.jpg"
 st.sidebar.image(avatar_url, use_container_width=True)
 
 # 侧边栏互动按钮
 if st.sidebar.button("🥰 戳戳歪歪（获取每日鼓励）"):
-    st.balloons()  # ✨ 触发全屏放气球的炫酷特效！
+    st.balloons()  # 触发全屏放气球的炫酷特效！
     st.sidebar.success("今天也要好好吃饭，健康减脂！你是最棒的，贴贴~ 💋")
 
 # ================= 主界面标题 =================
@@ -30,14 +30,17 @@ except Exception:
 # 初始化 DeepSeek 客户端
 client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
-# ================= 完美还原：用户表单输入部分 =================
+# ================= 用户表单输入部分 =================
 st.header("第一步：填写身体数据")
-col1, col2, col3 = st.columns(3)
+# 升级为4列布局，完美并排容纳性别
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
+    gender = st.selectbox("性别", ["男 (Male)", "女 (Female)"])
 with col2:
-    weight = st.number_input("体重 (kg)", min_value=30, max_value=200, value=70)
+    height = st.number_input("身高 (cm)", min_value=100, max_value=250, value=175)
 with col3:
+    weight = st.number_input("体重 (kg)", min_value=30, max_value=200, value=70)
+with col4:
     age = st.number_input("年龄", min_value=1, max_value=120, value=20)
 
 st.header("第二步：明确你的目标与身份")
@@ -60,25 +63,35 @@ extra_notes = st.text_input("忌口或额外需求（如：不吃香菜、海鲜
 # 开始生成按钮
 submit_btn = st.button("🚀 开始生成我的专属饮食计划")
 
-# ================= 业务逻辑：处理大模型请求 =================
+# ================= 业务逻辑：动态性别提示词 =================
 if submit_btn:
-    # 将用户的身份场景精准喂给 DeepSeek，让回答更接地气
+    
+    # 根据不同性别，动态注入完全不同的专业营养学侧重点
+    if gender == "男 (Male)":
+        gender_prompt = """
+- 针对【男性】生理特点：考虑到男性通常有更高的基础代谢和肌肉合成需求。请合理规划碳水和优质蛋白质的比例，注重肌肉修复，并确保提供充足的力量训练能量支持，避免肌肉流失。"""
+    else:
+        gender_prompt = """
+- 针对【女性】生理特点：考虑到女性的内分泌与激素健康至关重要。请特别注重优质脂肪（如坚果、蛋黄、牛油果）的合理搭配，确保摄入充足的铁元素与微量元素，强调科学减脂或塑形，切记严禁开出极端低热量、低碳水的极端口粮单，保护经期和代谢健康。"""
+
+    # 组合成最终发送给 DeepSeek 的总提示词
     prompt = f"""你是一位资深的专业健身营养师。请根据以下用户数据制定一份保姆级的饮食计划：
+- 性别：{gender} {gender_prompt}
 - 身高：{height}cm
 - 体重：{weight}kg
 - 年龄：{age}岁
 - 健身目标：{goal}
-- 身份场景：{identity} （请务必严格根据这个场景定制。如果是学生党，请多推荐高校食堂、校园便利店容易获取的经济实惠的食材和菜品）
+- 身份场景：{identity} （如果是学生党，请多推荐高校食堂、校园便利店容易获取的经济实惠的食材和菜品）
 - 额外需求：{extra_notes}
 
-请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估，排版请保持条理清晰、美观。"""
+请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估。排版请保持条理清晰、美观，多用表格或列表展示。"""
     
-    with st.spinner("🧙‍♂️ 营养师正在疯狂计算中，请稍候..."):
+    with st.spinner("🧙‍♂️ 营养师正在针对你的性别进行精确计算..."):
         try:
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "你是一个专业的健康饮食AI助手，给出的方案必须条理清晰、排版美观。"},
+                    {"role": "system", "content": "你是一个专业的健康饮食AI助手，懂得男女生理代谢差异，给出的方案必须条理清晰、排版美观。"},
                     {"role": "user", "content": prompt}
                 ],
                 stream=False
@@ -90,7 +103,7 @@ if submit_btn:
             st.success("✨ 你的专属定制方案已生成！")
             st.markdown(result_text)
             
-            # ================= 功能二：一键下载功能 =================
+            # ================= 功能：一键下载功能 =================
             st.write("---")
             st.download_button(
                 label="📥 一键下载饮食计划 (.md文本)",
