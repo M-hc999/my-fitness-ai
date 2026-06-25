@@ -11,7 +11,7 @@ st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout=
 st.sidebar.header("💖 专属能量站")
 
 # 替换为了国内访问极其稳定的高颜值大厂图床头像
-avatar_url = "https://img.alicdn.com/imgextra/i4/O1CN01Z5v6vD21gZ6v8YfVb_!!6000000007018-2-tps-200-200.png"
+avatar_url = "log.jpg"
 st.sidebar.image(avatar_url, use_container_width=True)
 
 # 侧边栏互动按钮
