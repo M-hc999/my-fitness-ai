@@ -5,7 +5,6 @@ from openai import OpenAI
 st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout="centered")
 
 # ================= 功能一：女朋友侧边栏互动头像 =================
-st.sidebar.header("💖 专属能量站")
 
 # 这里使用了一张高质量的二次元可爱女生头像，你可以随时换成你女朋友照片的图床链接
 # ================= 功能一：女朋友侧边栏互动头像 =================
