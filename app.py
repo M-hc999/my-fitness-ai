@@ -64,6 +64,7 @@ extra_notes = st.text_input("忌口或额外需求（如：不吃香菜、海鲜
 submit_btn = st.button("🚀 开始生成我的专属饮食计划")
 
 # ================= 业务逻辑：动态性别提示词 =================
+# ================= 业务逻辑：流式响应升级版 =================
 if submit_btn:
     
     # 根据不同性别，动态注入完全不同的专业营养学侧重点
@@ -86,22 +87,31 @@ if submit_btn:
 
 请给出具体的早餐、午餐、加餐、晚餐建议，并包含总热量预估。排版请保持条理清晰、美观，多用表格或列表展示。"""
     
+    # 使用占位符，让体验更丝滑
     with st.spinner("🧙‍♂️ 营养师正在针对你的性别进行精确计算..."):
         try:
+            # 🚀 核心改变一：将 stream 设置为 True
             response = client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": "你是一个专业的健康饮食AI助手，懂得男女生理代谢差异，给出的方案必须条理清晰、排版美观。"},
                     {"role": "user", "content": prompt}
                 ],
-                stream=False
+                stream=True 
             )
-            # 获取生成的纯文本方案
-            result_text = response.choices[0].message.content
             
-            # 展示方案
             st.success("✨ 你的专属定制方案已生成！")
-            st.markdown(result_text)
+            
+            # 🚀 核心改变二：创建一个干净的文本流生成器
+            def generate_chunks():
+                for chunk in response:
+                    content = chunk.choices[0].delta.content
+                    if content is not None:
+                        yield content
+            
+            # 🚀 核心改变三：使用 st.write_stream 现场表演“打字机效果”
+            # 它不仅能一边吐字一边显示，还能自动把最终的完整文本存进 result_text 供下载！
+            result_text = st.write_stream(generate_chunks())
             
             # ================= 功能：一键下载功能 =================
             st.write("---")
