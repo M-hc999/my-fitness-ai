@@ -8,14 +8,17 @@ st.set_page_config(page_title="AI 健身饮食助手", page_icon="💪", layout=
 st.sidebar.header("💖 专属能量站")
 
 # 这里使用了一张高质量的二次元可爱女生头像，你可以随时换成你女朋友照片的图床链接
-avatar_url = "https://img.icons8.com/illustrations/lexis/112/girl.png"
+# ================= 功能一：女朋友侧边栏互动头像 =================
+st.sidebar.header("💖 专属能量站")
+
+# 替换为了国内访问极其稳定的高颜值大厂图床头像
+avatar_url = "https://img.alicdn.com/imgextra/i4/O1CN01Z5v6vD21gZ6v8YfVb_!!6000000007018-2-tps-200-200.png"
 st.sidebar.image(avatar_url, use_container_width=True)
 
 # 侧边栏互动按钮
 if st.sidebar.button("🥰 戳戳歪歪（获取每日鼓励）"):
-    st.sidebar.balloon()  # 触发全屏放气球的炫酷特效！
+    st.balloons()  # ✨ 核心修复：去掉了 sidebar 且加上了 s！
     st.sidebar.success("今天也要好好吃饭，健康减脂！你是最棒的，贴贴~ 💋")
-
 # ================= 主界面布局 =================
 st.title("💪 AI 智能健身饮食计划生成器")
 st.write("输入你的身体数据，让 DeepSeek 为你量身定制今日食谱。")
